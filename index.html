@@ -2,314 +2,551 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>Caza de Lucianas 3°D - Rápido y Furioso</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Caza de Lucianas</title>
 <style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-tap-highlight-color: transparent;
-    }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{height:100%;overflow:hidden;background:#000;color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
+  #app{position:fixed;inset:0;overflow:hidden;background:#000}
+  #cv{display:block;width:100%;height:100%;touch-action:none}
+  #ui{position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:6px;
+      pointer-events:none;z-index:10}
+  .pill{flex:1;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.25);
+        border-radius:8px;padding:5px 4px;text-align:center;font-weight:700;
+        font-size:clamp(11px,3.4vw,14px);white-space:nowrap;overflow:hidden}
+  #s-score{color:#f1c40f}#s-time{color:#e74c3c}#s-weap{color:#00e5ff}#s-coin{color:#2ecc71}
 
-    html, body {
-        height: 100%;
-        overflow: hidden;
-        overscroll-behavior: none;
-        background: #111;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: white;
-        touch-action: none;
-        -webkit-touch-callout: none;
-    }
+  .screen{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;padding:20px;gap:10px;
+    background:rgba(8,8,12,.96);overflow-y:auto;-webkit-overflow-scrolling:touch;
+    touch-action:pan-y}
+  .screen.hide{display:none}
+  .screen h1{font-size:clamp(22px,7vw,32px);color:#e74c3c;text-transform:uppercase;
+    text-shadow:2px 2px 0 #000;margin-bottom:4px}
+  .screen p{font-size:14px;color:#ccc}
+  .btn{padding:14px 24px;font-size:16px;font-weight:700;color:#fff;background:#2ecc71;
+    border:0;border-radius:10px;box-shadow:0 4px 0 #27ae60;cursor:pointer;
+    width:100%;max-width:300px;touch-action:manipulation;transition:transform .08s}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #27ae60}
+  .btn.blue{background:#3498db;box-shadow:0 4px 0 #2980b9}
+  .btn.blue:active{box-shadow:0 1px 0 #2980b9}
+  .btn.red{background:#e74c3c;box-shadow:0 4px 0 #c0392b}
+  .btn.red:active{box-shadow:0 1px 0 #c0392b}
 
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        /* Fallbacks progresivos para altura */
-        height: 100vh;
-        height: 100svh;
-        height: 100dvh;
-    }
+  .list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:380px}
+  .item{display:flex;align-items:center;gap:8px;background:#1c1c22;border:1px solid #333;
+    border-radius:10px;padding:10px}
+  .item .info{flex:1;min-width:0;text-align:left}
+  .item .t{font-size:14px;font-weight:700}
+  .item .d{font-size:11px;color:#999;margin-top:2px}
+  .buy{padding:8px 12px;font-size:13px;font-weight:700;background:#f1c40f;color:#000;
+    border:0;border-radius:6px;box-shadow:0 3px 0 #d4ac0d;min-width:84px;
+    touch-action:manipulation;cursor:pointer;white-space:nowrap}
+  .buy:active{transform:translateY(3px);box-shadow:none}
+  .buy.on{background:#2ecc71;color:#fff;box-shadow:0 3px 0 #27ae60}
+  .buy.on:active{box-shadow:none}
 
-    #game-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        max-width: 900px;
-        overflow: hidden;
-        background: #000;
-        box-shadow: 0 0 30px rgba(0,0,0,0.9);
-        /* Safe areas en iOS con notch */
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
-
-    canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        touch-action: none;
-        cursor: crosshair;
-    }
-
-    #watermark {
-        position: absolute;
-        bottom: calc(10px + env(safe-area-inset-bottom));
-        right: 15px;
-        font-size: 11px;
-        color: rgba(255,255,255,0.3);
-        font-weight: bold;
-        pointer-events: none;
-        z-index: 10;
-    }
-
-    #ui-layer {
-        position: absolute;
-        top: env(safe-area-inset-top);
-        left: 0;
-        width: 100%;
-        pointer-events: none;
-        padding: 8px;
-        z-index: 20;
-    }
-
-    #top-bar {
-        display: flex;
-        justify-content: space-between;
-        gap: 4px;
-    }
-
-    .panel {
-        background: rgba(0,0,0,0.75);
-        padding: 6px 4px;
-        border-radius: 8px;
-        font-size: clamp(11px, 3.5vw, 14px);
-        font-weight: bold;
-        border: 1px solid rgba(255,255,255,0.2);
-        flex: 1;
-        text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    #ui-score { color: #f1c40f; }
-    #ui-time { color: #e74c3c; }
-    #ui-weapon { color: #00e5ff; }
-    #ui-coins { color: #2ecc71; }
-
-    .screen {
-        position: absolute;
-        inset: 0;
-        background: rgba(10,10,15,0.96);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 100;
-        text-align: center;
-        padding: 20px;
-        padding-top: calc(20px + env(safe-area-inset-top));
-        padding-bottom: calc(20px + env(safe-area-inset-bottom));
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-    }
-
-    .screen h1 {
-        font-size: clamp(22px, 7vw, 30px);
-        margin-bottom: 5px;
-        color: #e74c3c;
-        text-transform: uppercase;
-        text-shadow: 2px 2px 0 #000;
-    }
-
-    .credits {
-        font-size: 12px;
-        color: #aaa;
-        margin-bottom: 20px;
-        background: rgba(255,255,255,0.1);
-        padding: 4px 12px;
-        border-radius: 15px;
-    }
-
-    .screen p { margin-bottom: 12px; color: #ddd; font-size: 14px; }
-
-    .btn {
-        padding: 14px 25px;
-        font-size: 16px;
-        font-weight: bold;
-        color: white;
-        background: #2ecc71;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        box-shadow: 0 4px 0 #27ae60;
-        transition: transform 0.08s, box-shadow 0.08s;
-        width: 100%;
-        max-width: 280px;
-        margin-bottom: 10px;
-        touch-action: manipulation;
-    }
-
-    .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #27ae60; }
-    .btn-secondary { background: #3498db; box-shadow: 0 4px 0 #2980b9; }
-    .btn-secondary:active { box-shadow: 0 0 0 #2980b9; }
-    .btn-danger { background: #e74c3c; box-shadow: 0 4px 0 #c0392b; }
-    .btn-danger:active { box-shadow: 0 0 0 #c0392b; }
-
-    .shop-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        width: 100%;
-        max-width: 380px;
-        margin-bottom: 15px;
-    }
-
-    .shop-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #222;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #444;
-        gap: 8px;
-    }
-
-    .shop-item-info { text-align: left; flex: 1; min-width: 0; }
-    .shop-item-title { font-size: 14px; font-weight: bold; color: #fff; }
-    .shop-item-desc { font-size: 11px; color: #aaa; margin-top: 2px; }
-
-    .shop-btn {
-        padding: 8px 12px;
-        font-size: 13px;
-        background: #f1c40f;
-        color: #000;
-        border: none;
-        border-radius: 5px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 3px 0 #d4ac0d;
-        min-width: 80px;
-        white-space: nowrap;
-        touch-action: manipulation;
-    }
-    .shop-btn:active { transform: translateY(3px); box-shadow: none; }
-    .shop-btn.active { background: #2ecc71; box-shadow: 0 3px 0 #27ae60; color: #fff; }
-    .shop-btn:disabled { background: #555; box-shadow: 0 3px 0 #333; color: #888; }
-
-    .hidden { display: none !important; }
-
-    .floating-text {
-        position: absolute;
-        color: #f1c40f;
-        font-weight: bold;
-        font-size: 18px;
-        pointer-events: none;
-        text-shadow: 1px 1px 0 #000;
-        animation: floatUp 0.7s ease-out forwards;
-        z-index: 50;
-    }
-
-    @keyframes floatUp {
-        0% { transform: translateY(0) scale(1); opacity: 1; }
-        100% { transform: translateY(-50px) scale(1.3); opacity: 0; }
-    }
+  #ftext{position:absolute;color:#f1c40f;font-weight:700;font-size:18px;
+    pointer-events:none;text-shadow:1px 1px 0 #000;z-index:40;
+    animation:fu .7s ease-out forwards}
+  @keyframes fu{to{transform:translateY(-50px) scale(1.3);opacity:0}}
 </style>
 </head>
 <body>
+<div id="app">
+  <canvas id="cv"></canvas>
+  <div id="ui">
+    <div class="pill">Pts: <span id="s-score">0</span></div>
+    <div class="pill">T: <span id="s-time">30</span></div>
+    <div class="pill">Arma: <span id="s-weap">Pistola</span></div>
+    <div class="pill">🪙 <span id="s-coin">0</span></div>
+  </div>
 
-<div id="game-container">
-    <canvas id="gameCanvas"></canvas>
-    <div id="watermark">Hecho por 3°D escondido</div>
+  <!-- MENÚ -->
+  <div class="screen" id="menu">
+    <h1>Caza de Lucianas</h1>
+    <p>Récord: <b id="s-high">0</b></p>
+    <p style="font-size:12px;color:#888">Toca y mantén para disparar</p>
+    <button class="btn" id="b-play">Jugar</button>
+    <button class="btn blue" id="b-shop">Armería</button>
+    <button class="btn blue" id="b-maps">Mapas</button>
+  </div>
 
-    <div id="ui-layer">
-        <div id="top-bar">
-            <div class="panel">Pts: <span id="ui-score">0</span></div>
-            <div class="panel">T: <span id="ui-time">30</span></div>
-            <div class="panel">Arma: <span id="ui-weapon">Pistola</span></div>
-            <div class="panel">🪙 <span id="ui-coins">0</span></div>
-        </div>
+  <!-- TIENDA -->
+  <div class="screen hide" id="shop">
+    <h1>Armería</h1>
+    <p>Monedas: <b style="color:#2ecc71">🪙 <span id="s-coinshop">0</span></b></p>
+    <div class="list">
+      <div class="item"><div class="info"><div class="t">Pistola Rápida</div>
+        <div class="d">Daño 1 · Muy rápida (gratis)</div></div>
+        <button class="buy" data-w="pistola">Equipar</button></div>
+      <div class="item"><div class="info"><div class="t">Subfusil</div>
+        <div class="d">Daño 1 · Ultrarrápido</div></div>
+        <button class="buy" data-w="subfusil">150 🪙</button></div>
+      <div class="item"><div class="info"><div class="t">Ametralladora</div>
+        <div class="d">Daño 2 · Rápida y potente</div></div>
+        <button class="buy" data-w="ametralladora">400 🪙</button></div>
+      <div class="item"><div class="info"><div class="t">Tiempo Extra</div>
+        <div class="d">+5 s por partida</div></div>
+        <button class="buy" id="b-time">50 🪙</button></div>
     </div>
+    <button class="btn red" id="b-shop-back">Volver</button>
+  </div>
 
-    <div class="screen" id="start-screen">
-        <h1>Caza de Lucianas</h1>
-        <div class="credits">Hecho por 3°D escondido</div>
-        <p>Récord: <span id="ui-highscore">0</span></p>
-        <p style="font-size:12px;color:#aaa;">Mantén presionado para disparar rápido</p>
-        <button class="btn" id="btn-play">Jugar</button>
-        <button class="btn btn-secondary" id="btn-shop">Armería</button>
-        <button class="btn btn-secondary" id="btn-maps">Mapas</button>
+  <!-- MAPAS -->
+  <div class="screen hide" id="maps">
+    <h1>Mapas</h1>
+    <div class="list">
+      <div class="item"><div class="info"><div class="t">El Campo</div></div>
+        <button class="buy" data-m="campo">Elegir</button></div>
+      <div class="item"><div class="info"><div class="t">Nieve</div></div>
+        <button class="buy" data-m="nieve">Elegir</button></div>
+      <div class="item"><div class="info"><div class="t">Noche Oscura</div>
+        <div class="d">Solo ves cerca del puntero</div></div>
+        <button class="buy" data-m="noche">Elegir</button></div>
     </div>
+    <button class="btn red" id="b-maps-back">Volver</button>
+  </div>
 
-    <div class="screen hidden" id="shop-screen">
-        <h1>Armería</h1>
-        <p>Monedas: <b style="color:#2ecc71;">🪙 <span id="shop-coins">0</span></b></p>
-        <div class="shop-grid">
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <div class="shop-item-title">Pistola Rápida</div>
-                    <div class="shop-item-desc">Daño: 1 | Muy Rápida (Gratis)</div>
-                </div>
-                <button class="shop-btn" id="btn-w-pistola">Equipar</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <div class="shop-item-title">Subfusil</div>
-                    <div class="shop-item-desc">Daño: 1 | Ultrarrápido</div>
-                </div>
-                <button class="shop-btn" id="btn-w-subfusil">150 🪙</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <div class="shop-item-title">Ametralladora</div>
-                    <div class="shop-item-desc">Daño: 2 | Rápida y Potente</div>
-                </div>
-                <button class="shop-btn" id="btn-w-ametralladora">400 🪙</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <div class="shop-item-title">Tiempo Extra</div>
-                    <div class="shop-item-desc">+5 segundos por partida</div>
-                </div>
-                <button class="shop-btn" id="btn-buy-time">50 🪙</button>
-            </div>
-        </div>
-        <button class="btn btn-danger" id="btn-shop-back">Volver</button>
-    </div>
+  <!-- GAME OVER -->
+  <div class="screen hide" id="over">
+    <h1>¡Fin!</h1>
+    <p>Puntos: <b id="s-final" style="font-size:30px;color:#f1c40f">0</b></p>
+    <p>Ganaste: <b style="color:#2ecc71">+<span id="s-earn">0</span> 🪙</b></p>
+    <button class="btn" id="b-retry">Reintentar</button>
+    <button class="btn blue" id="b-menu">Menú</button>
+  </div>
+</div>
 
-    <div class="screen hidden" id="map-screen">
-        <h1>Mapas</h1>
-        <div class="shop-grid">
-            <div class="shop-item">
-                <div class="shop-item-info"><div class="shop-item-title">El Campo</div></div>
-                <button class="shop-btn" id="btn-m-campo">Elegir</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info"><div class="shop-item-title">Nieve</div></div>
-                <button class="shop-btn" id="btn-m-nieve">Elegir</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <div class="shop-item-title">Noche Oscura</div>
-                    <div class="shop-item-desc">Solo ves cerca del puntero</div>
-                </div>
-                <button class="shop-btn" id="btn-m-noche">Elegir</button>
-            </div>
-        </div>
-        <button class="btn btn-danger" id="btn-maps-back">Volver</button>
-    </div>
+<script>
+'use strict';
+(function(){
+  // ---------- polyfill roundRect ----------
+  var proto = CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+  if (proto && !proto.roundRect) {
+    proto.roundRect = function(x,y,w,h,r){
+      if (typeof r === 'number') r=[r,r,r,r];
+      if (r.length===2) r=[r[0],r[1],r[0],r[1]];
+      var tl=r[0],tr=r[1],br=r[2],bl=r[3];
+      this.beginPath();
+      this.moveTo(x+tl,y);
+      this.lineTo(x+w-tr,y); this.quadraticCurveTo(x+w,y,x+w,y+tr);
+      this.lineTo(x+w,y+h-br); this.quadraticCurveTo(x+w,y+h,x+w-br,y+h);
+      this.lineTo(x+bl,y+h); this.quadraticCurveTo(x,y+h,x,y+h-bl);
+      this.lineTo(x,y+tl); this.quadraticCurveTo(x,y,x+tl,y);
+      this.closePath(); return this;
+    };
+  }
 
-    <div class="screen hidden" id="game-over-screen">
-        <h1>¡Fin!</h1>
-        <p>Puntos: <span id="final-score" style="font-size:30px;color:#f1c40f;font-weight:bold;">0</span></p>
+  // ---------- storage seguro ----------
+  var Store = {
+    get:function(k,d){ try{var v=localStorage.getItem(k); return v?JSON.parse(v):d;}catch(e){return d;} },
+    set:function(k,v){ try{localStorage.setItem(k,JSON.stringify(v)); return true;}catch(e){return false;} }
+  };
+
+  // ---------- canvas ----------
+  var app = document.getElementById('app');
+  var cv  = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var W = 0, H = 0, DPR = 1;
+
+  function resize(){
+    // Usa el tamaño del viewport, no del contenedor (evita padding/notch)
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    if (window.visualViewport){
+      vw = window.visualViewport.width;
+      vh = window.visualViewport.height;
+    }
+    W = Math.max(1, Math.floor(vw));
+    H = Math.max(1, Math.floor(vh));
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width  = Math.floor(W * DPR);
+    cv.height = Math.floor(H * DPR);
+    cv.style.width  = W + 'px';
+    cv.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', function(){ setTimeout(resize,150); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+  resize();
+
+  // ---------- datos ----------
+  var DEFAULTS = {
+    high:0, coins:100,
+    upg:{time:0},
+    weapons:{pistola:true, subfusil:false, ametralladora:false},
+    weapon:'pistola', map:'campo'
+  };
+  var SAVE = Store.get('lucianas_v4', null) || JSON.parse(JSON.stringify(DEFAULTS));
+  SAVE.upg     = Object.assign({time:0}, SAVE.upg||{});
+  SAVE.weapons = Object.assign({pistola:true,subfusil:false,ametralladora:false}, SAVE.weapons||{});
+  if (!SAVE.weapon) SAVE.weapon='pistola';
+  if (!SAVE.map)    SAVE.map='campo';
+  if (typeof SAVE.coins!=='number') SAVE.coins=0;
+  if (typeof SAVE.high !=='number') SAVE.high=0;
+  function save(){ Store.set('lucianas_v4', SAVE); }
+
+  // ---------- armas / mapas ----------
+  var WEAPONS = {
+    pistola:       {name:'Pistola',       cd:150, dmg:1, radius:30, col:'#f1c40f'},
+    subfusil:      {name:'Subfusil',      cd:70,  dmg:1, radius:20, col:'#3498db'},
+    ametralladora: {name:'Ametralladora', cd:100, dmg:2, radius:35, col:'#e74c3c'}
+  };
+  var MAPS = {
+    campo:{sky1:'#87CEEB', sky2:'#e0f6ff', ground:'#7CFC00'},
+    nieve:{sky1:'#b0c4de', sky2:'#f0f8ff', ground:'#ffffff'},
+    noche:{sky1:'#0a0a2a', sky2:'#1a1a3a', ground:'#2d2d2d'}
+  };
+
+  // ---------- estado ----------
+  var playing=false, score=0, timeLeft=30, lastShot=0;
+  var rafId=null, timerId=null, lastT=0, spawnT=0;
+  var cows=[], parts=[];
+  var px=0, py=0, down=false;
+
+  // ---------- audio (lazy) ----------
+  var AC=null, actx=null;
+  function audio(){
+    if (!actx){
+      try{
+        AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) actx = new AC();
+      }catch(e){actx=null;}
+    }
+    if (actx && actx.state==='suspended') actx.resume().catch(function(){});
+    return actx;
+  }
+  function sfx(type){
+    var a = actx; if (!a || a.state!=='running') return;
+    try{
+      var o=a.createOscillator(), g=a.createGain(), t=a.currentTime;
+      if (type==='pistola'){o.type='square';o.frequency.setValueAtTime(400,t);
+        o.frequency.exponentialRampToValueAtTime(100,t+.1);
+        g.gain.setValueAtTime(.08,t); g.gain.exponentialRampToValueAtTime(.001,t+.1); o.start(t);o.stop(t+.1);}
+      else if (type==='subfusil'){o.type='sawtooth';o.frequency.setValueAtTime(600,t);
+        o.frequency.exponentialRampToValueAtTime(200,t+.05);
+        g.gain.setValueAtTime(.06,t); g.gain.exponentialRampToValueAtTime(.001,t+.05); o.start(t);o.stop(t+.05);}
+      else if (type==='ametralladora'){o.type='square';o.frequency.setValueAtTime(200,t);
+        o.frequency.exponentialRampToValueAtTime(50,t+.15);
+        g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.15); o.start(t);o.stop(t+.15);}
+      else if (type==='muu'){o.type='sawtooth';o.frequency.setValueAtTime(120,t);
+        o.frequency.linearRampToValueAtTime(80,t+.3);
+        g.gain.setValueAtTime(.1,t); g.gain.linearRampToValueAtTime(.001,t+.3); o.start(t);o.stop(t+.3);}
+      o.connect(g); g.connect(a.destination);
+    }catch(e){}
+  }
+
+  // ---------- UI ----------
+  function $(id){return document.getElementById(id);}
+  function show(id){
+    ['menu','shop','maps','over'].forEach(function(k){ $(k).classList.add('hide'); });
+    if (id) $(id).classList.remove('hide');
+  }
+  function refreshUI(){
+    $('s-high').textContent = SAVE.high;
+    $('s-coin').textContent = SAVE.coins;
+    $('s-coinshop').textContent = SAVE.coins;
+    $('b-time').textContent = (50*(SAVE.upg.time+1)) + ' 🪙';
+    $('s-weap').textContent = WEAPONS[SAVE.weapon].name;
+
+    document.querySelectorAll('.buy[data-w]').forEach(function(b){
+      var w=b.getAttribute('data-w');
+      if (SAVE.weapon===w){ b.textContent='Equipada'; b.classList.add('on'); }
+      else if (SAVE.weapons[w]){ b.textContent='Equipar'; b.classList.remove('on'); }
+      else { b.textContent = (w==='subfusil'?150:400)+' 🪙'; b.classList.remove('on'); }
+    });
+    document.querySelectorAll('.buy[data-m]').forEach(function(b){
+      var m=b.getAttribute('data-m');
+      if (SAVE.map===m){ b.textContent='Actual'; b.classList.add('on'); }
+      else { b.textContent='Elegir'; b.classList.remove('on'); }
+    });
+  }
+
+  // ---------- Luciana ----------
+  function Luciana(){
+    this.w=65; this.h=50;
+    var vw = W || window.innerWidth, vh = H || window.innerHeight;
+    this.x = Math.random()>.5 ? -this.w : vw;
+    this.y = 90 + Math.random() * Math.max(60, vh - this.h - 200);
+    var sp = Math.max(1, vw/400);
+    this.vx = (Math.random()*1.5 + sp) * (this.x<0 ? 1 : -1);
+    this.vy = (Math.random()-.5) * sp;
+    this.col = SAVE.map==='noche' ? '#444' : '#fff';
+    this.dir = this.vx>0 ? 1 : -1;
+    this.walk = Math.random()*Math.PI*2;
+    this.hp = 3;
+    this.dead = false;
+  }
+  Luciana.prototype.update = function(dt){
+    var vh = H || window.innerHeight;
+    this.x += this.vx * dt * 60;
+    this.y += this.vy * dt * 60;
+    this.walk += 10 * dt;
+    if (this.y < 80){ this.y=80; this.vy=Math.abs(this.vy); }
+    if (this.y > vh - this.h - 40){ this.y = vh - this.h - 40; this.vy=-Math.abs(this.vy); }
+    this.dir = this.vx>0 ? 1 : -1;
+    if (this.x < -250 || this.x > (W||window.innerWidth)+250) this.dead = true;
+  };
+  Luciana.prototype.draw = function(){
+    ctx.save();
+    ctx.translate(this.x + this.w/2, this.y + this.h/2);
+    ctx.scale(this.dir, 1);
+
+    // patas
+    ctx.strokeStyle='#000'; ctx.lineWidth=3;
+    var lo = Math.sin(this.walk)*5;
+    ctx.beginPath();
+    ctx.moveTo(-15,10); ctx.lineTo(-20+lo,20);
+    ctx.moveTo(-5,10);  ctx.lineTo(0-lo,20);
+    ctx.moveTo(10,10);  ctx.lineTo(15-lo,20);
+    ctx.moveTo(20,10);  ctx.lineTo(25+lo,20);
+    ctx.stroke();
+
+    // cuerpo
+    ctx.fillStyle = this.col;
+    ctx.beginPath();
+    ctx.roundRect(-this.w/2, -this.h/2+5, this.w, this.h-10, 10);
+    ctx.fill();
+    ctx.strokeStyle='#000'; ctx.lineWidth=2; ctx.stroke();
+
+    // manchas
+    ctx.fillStyle='#111';
+    ctx.beginPath();
+    ctx.arc(-10,-8,8,0,Math.PI*2);
+    ctx.arc(10,2,6,0,Math.PI*2);
+    ctx.fill();
+
+    // cabeza
+    ctx.fillStyle=this.col;
+    ctx.beginPath();
+    ctx.roundRect(20,-15,20,25,8);
+    ctx.fill(); ctx.strokeStyle='#000'; ctx.lineWidth=2; ctx.stroke();
+
+    // ojos
+    if (SAVE.map==='noche'){
+      ctx.fillStyle='#ff0000';
+      ctx.beginPath(); ctx.arc(27,-2,3,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.strokeStyle='#000'; ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(25,-5); ctx.lineTo(30,0);
+      ctx.moveTo(30,-5); ctx.lineTo(25,0);
+      ctx.stroke();
+    }
+
+    // hp bar
+    if (this.hp<3){
+      ctx.fillStyle='#000'; ctx.fillRect(-this.w/2,-this.h/2-8,this.w,4);
+      ctx.fillStyle='#e74c3c'; ctx.fillRect(-this.w/2,-this.h/2-8,this.w*(this.hp/3),4);
+    }
+    ctx.restore();
+  };
+  Luciana.prototype.hit = function(x,y){
+    return x>this.x-10 && x<this.x+this.w+10 && y>this.y-10 && y<this.y+this.h+10;
+  };
+
+  // ---------- partículas ----------
+  function burst(x,y,col,n){
+    for (var i=0;i<n;i++){
+      parts.push({
+        x:x, y:y,
+        vx:(Math.random()-.5)*6,
+        vy:(Math.random()-.5)*6,
+        life:.5+Math.random()*.3,
+        max:.8, col:col, s:2+Math.random()*3
+      });
+    }
+  }
+  function updateParts(dt){
+    for (var i=parts.length-1;i>=0;i--){
+      var p=parts[i];
+      p.x+=p.vx*dt*60; p.y+=p.vy*dt*60; p.vy+=0.15;
+      p.life-=dt;
+      if (p.life<=0) parts.splice(i,1);
+    }
+  }
+  function drawParts(){
+    for (var i=0;i<parts.length;i++){
+      var p=parts[i];
+      ctx.globalAlpha = Math.max(0, p.life/p.max);
+      ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // ---------- disparo ----------
+  function shoot(){
+    if (!playing) return;
+    var now = performance.now();
+    var w = WEAPONS[SAVE.weapon];
+    if (now - lastShot < w.cd) return;
+    lastShot = now;
+    sfx(SAVE.weapon);
+    for (var i=cows.length-1;i>=0;i--){
+      var c=cows[i];
+      if (c.hit(px,py)){
+        c.hp -= w.dmg;
+        burst(px,py,w.col,8);
+        if (c.hp<=0){
+          burst(c.x+c.w/2, c.y+c.h/2, '#f1c40f', 15);
+          sfx('muu');
+          cows.splice(i,1);
+          score+=10;
+          $('s-score').textContent = score;
+          floatText(px,py,'+10');
+        }
+        break;
+      }
+    }
+  }
+  function floatText(x,y,txt){
+    var el = document.createElement('div');
+    el.id = 'ftext';
+    el.textContent = txt;
+    el.style.left = x+'px';
+    el.style.top  = y+'px';
+    app.appendChild(el);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
+  }
+
+  // ---------- loop ----------
+  function spawn(){
+    var max = 8 + Math.floor(score/50);
+    if (cows.length < max && (W||window.innerWidth)>10) cows.push(new Luciana());
+  }
+
+  function loop(t){
+    if (!playing) return;
+    if (!lastT) lastT = t;
+    var dt = (t-lastT)/1000;
+    lastT = t;
+    if (dt>0.05) dt = 0.05;
+
+    spawnT += dt;
+    if (spawnT > 0.8){ spawnT=0; spawn(); }
+
+    for (var i=0;i<cows.length;i++) cows[i].update(dt);
+    // eliminar sin crear array nuevo cada frame (menos GC)
+    for (var j=cows.length-1;j>=0;j--){ if (cows[j].dead) cows.splice(j,1); }
+
+    updateParts(dt);
+    if (down) shoot();
+
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function render(){
+    var vw = W||window.innerWidth, vh = H||window.innerHeight;
+    var m = MAPS[SAVE.map];
+
+    var g = ctx.createLinearGradient(0,0,0,vh);
+    g.addColorStop(0, m.sky1);
+    g.addColorStop(0.7, m.sky2);
+    g.addColorStop(0.7, m.ground);
+    g.addColorStop(1, m.ground);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,vw,vh);
+
+    for (var i=0;i<cows.length;i++) cows[i].draw();
+    drawParts();
+
+    if (SAVE.map==='noche'){
+      ctx.save();
+      ctx.fillStyle='rgba(0,0,0,.85)';
+      ctx.beginPath();
+      ctx.rect(0,0,vw,vh);
+      ctx.arc(px,py,90,0,Math.PI*2,true);
+      ctx.fill('evenodd');
+      ctx.restore();
+    }
+
+    if (playing){
+      var w = WEAPONS[SAVE.weapon];
+      ctx.strokeStyle = w.col; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(px,py,14,0,Math.PI*2);
+      ctx.moveTo(px-20,py); ctx.lineTo(px-8,py);
+      ctx.moveTo(px+8,py);  ctx.lineTo(px+20,py);
+      ctx.moveTo(px,py-20); ctx.lineTo(px,py-8);
+      ctx.moveTo(px,py+8);  ctx.lineTo(px,py+20);
+      ctx.stroke();
+    }
+  }
+
+  // ---------- ciclo de partida ----------
+  function startGame(){
+    audio();
+    show(null);
+    playing = true;
+    score = 0; timeLeft = 30 + SAVE.upg.time*5;
+    cows.length = 0; parts.length = 0;
+    lastShot = 0; lastT = 0; spawnT = 0;
+    $('s-score').textContent = '0';
+    $('s-time').textContent  = timeLeft;
+    $('s-weap').textContent  = WEAPONS[SAVE.weapon].name;
+    $('s-coin').textContent  = SAVE.coins;
+
+    // pre-poblar
+    for (var i=0;i<3;i++) cows.push(new Luciana());
+
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(function(){
+      if (!playing) return;
+      timeLeft--;
+      $('s-time').textContent = Math.max(0,timeLeft);
+      if (timeLeft<=0) endGame();
+    }, 1000);
+  }
+
+  function endGame(){
+    playing = false; down = false;
+    if (timerId){ clearInterval(timerId); timerId=null; }
+    if (rafId){ cancelAnimationFrame(rafId); rafId=null; }
+
+    var earn = Math.floor(score/5);
+    SAVE.coins += earn;
+    if (score > SAVE.high) SAVE.high = score;
+    save();
+
+    $('s-final').textContent = score;
+    $('s-earn').textContent  = earn;
+    refreshUI();
+    show('over');
+  }
+
+  // ---------- entrada unificada ----------
+  function point(e){
+    var rect = cv.getBoundingClientRect();
+    var t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+
+  function onDown(e){
+    e.preventDefault();
+    audio();
+    var p = point(e);
+    px = p.x; py = p.y;
+    down = true;
+    shoot();
+  }
+  function onMove(e){
+    var p = point(e);
+    px = p.x; py = p.y;
+  }
+  function onUp(){ down = false; }
+
+  if (window.PointerEvent){
+    cv.addEventListener('pointerdown', onDown, {pas/span></p>
         <p>Ganaste: <b style="color:#2ecc71;">+<span id="final-coins">0</span> 🪙</b></p>
         <button class="btn" id="btn-retry">Reintentar</button>
         <button class="btn btn-secondary" id="btn-menu">Menú</button>
